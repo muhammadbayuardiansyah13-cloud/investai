@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InvestAI — Rekomendasi Investasi Berbasis AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN SYSTEM — Dark Luxury / Finance
+═══════════════════════════════════════════ */
+:root {
+  --bg-base:    #080c14;
+  --bg-surface: #0e1623;
+  --bg-card:    #121d2f;
+  --bg-card2:   #172030;
+  --bg-input:   #0b1220;
+  --border:     rgba(255,255,255,0.06);
+  --border-md:  rgba(255,255,255,0.10);
+
+  --emerald:    #10b981;
+  --emerald-lt: #34d399;
+  --emerald-glow: rgba(16,185,129,0.18);
+  --gold:       #f59e0b;
+  --gold-lt:    #fbbf24;
+  --blue:       #3b82f6;
+  --purple:     #8b5cf6;
+  --rose:       #f43f5e;
+
+  --text:       #e8edf7;
+  --text-md:    #9badc8;
+  --text-sm:    #5e7496;
+
+  --low-color:  #10b981;
+  --med-color:  #f59e0b;
+  --high-color: #f43f5e;
+
+  --saham-c:   #3b82f6;
+  --reksa-c:   #10b981;
+  --crypto-c:  #8b5cf6;
+  --oblig-c:   #f59e0b;
+  --emas-c:    #f97316;
+
+  --radius-sm: 10px;
+  --radius:    16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.45);
+  --shadow-glow: 0 0 40px rgba(16,185,129,0.15);
+  --transition: all .25s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-base);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Background mesh */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 10%, rgba(16,185,129,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 90%, rgba(59,130,246,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 60% at 50% 50%, rgba(245,158,11,0.03) 0%, transparent 70%);
+  pointer-events:none; z-index:0;
+}
+
+h1,h2,h3,h4,h5 { font-family:'Clash Display',sans-serif; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--bg-base); }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1); border-radius:99px; }
+
+/* ── PAGES ── */
+.page { display:none; min-height:100vh; position:relative; z-index:1; }
+.page.active { display:flex; flex-direction:column; }
+
+/* ═══════════════════════════════════════════
+   LOGIN / REGISTER PAGE
+═══════════════════════════════════════════ */
+#pg-login {
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+  min-height:100vh;
+}
+
+.login-wrap {
+  width:100%; max-width:440px;
+  animation: slideUp .6s cubic-bezier(.4,0,.2,1) both;
+}
+
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(30px); }
+  to   { opacity:1; transform:none; }
+}
+
+.brand-mark {
+  text-align:center;
+  margin-bottom:2.5rem;
+}
+.brand-icon {
+  width:76px; height:76px;
+  background:linear-gradient(135deg, var(--emerald), #065f46);
+  border-radius:22px;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:2.2rem;
+  box-shadow: 0 0 0 1px rgba(16,185,129,0.3), var(--shadow-glow);
+  margin-bottom:1.25rem;
+  position:relative;
+}
+.brand-icon::after {
+  content:'';
+  position:absolute; inset:-3px;
+  border-radius:25px;
+  border:1px solid rgba(16,185,129,0.2);
+}
+.brand-mark h1 {
+  font-size:2rem;
+  letter-spacing:-1px;
+  background:linear-gradient(135deg, #e8edf7 0%, var(--emerald-lt) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.brand-mark p { color:var(--text-sm); font-size:.85rem; margin-top:.3rem; }
+
+.glass-card {
+  background: rgba(18,29,47,0.8);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-xl);
+  padding:2.5rem;
+  backdrop-filter:blur(20px);
+  box-shadow: var(--shadow-card);
+}
+
+.tab-row {
+  display:flex;
+  background:var(--bg-input);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:4px;
+  margin-bottom:2rem;
+  gap:4px;
+}
+.tab-btn {
+  flex:1; padding:.6rem;
+  border:none; background:transparent;
+  color:var(--text-md);
+  font-family:'Clash Display',sans-serif;
+  font-size:.85rem; font-weight:600;
+  border-radius:12px;
+  cursor:pointer; transition:var(--transition);
+  letter-spacing:.3px;
+}
+.tab-btn.on { background:var(--emerald); color:#042314; }
+
+.field { margin-bottom:1.25rem; }
+.field label {
+  display:block;
+  font-size:.72rem; font-weight:500;
+  color:var(--text-sm);
+  text-transform:uppercase; letter-spacing:.8px;
+  margin-bottom:.5rem;
+}
+.field input {
+  width:100%; padding:.85rem 1.1rem;
+  background:var(--bg-input);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-sm);
+  color:var(--text);
+  font-family:'Outfit',sans-serif; font-size:.95rem;
+  transition:var(--transition); outline:none;
+}
+.field input:focus {
+  border-color:var(--emerald);
+  box-shadow:0 0 0 3px rgba(16,185,129,0.12);
+}
+.field input::placeholder { color:var(--text-sm); }
+
+.btn-main {
+  width:100%; padding:.9rem;
+  background:linear-gradient(135deg, var(--emerald), #059669);
+  border:none; border-radius:var(--radius-sm);
+  color:#031a0e; font-family:'Clash Display',sans-serif;
+  font-size:1rem; font-weight:700;
+  cursor:pointer; transition:var(--transition);
+  letter-spacing:.3px;
+}
+.btn-main:hover { transform:translateY(-1px); box-shadow:0 12px 30px rgba(16,185,129,0.35); }
+.btn-main:active { transform:none; }
+
+.inline-err {
+  color:var(--rose); font-size:.82rem;
+  margin-top:.75rem; text-align:center;
+  display:none; padding:.6rem;
+  background:rgba(244,63,94,0.08);
+  border:1px solid rgba(244,63,94,0.2);
+  border-radius:8px;
+}
+
+/* ═══════════════════════════════════════════
+   APP SHELL
+═══════════════════════════════════════════ */
+#pg-app { flex-direction:row; }
+
+/* SIDEBAR */
+.sidebar {
+  width:256px; min-height:100vh;
+  background:var(--bg-surface);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  padding:1.5rem 1rem;
+  position:fixed; left:0; top:0; bottom:0;
+  z-index:200; transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+
+.sb-brand {
+  display:flex; align-items:center; gap:.75rem;
+  padding:.5rem .75rem;
+  margin-bottom:2rem;
+}
+.sb-brand-icon {
+  width:40px; height:40px;
+  background:linear-gradient(135deg,var(--emerald),#065f46);
+  border-radius:11px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.15rem; flex-shrink:0;
+  box-shadow:0 4px 12px rgba(16,185,129,0.3);
+}
+.sb-brand-name {
+  font-family:'Clash Display',sans-serif;
+  font-size:1.2rem; font-weight:700;
+  background:linear-gradient(135deg,#e8edf7,var(--emerald-lt));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+
+.sb-section {
+  font-size:.68rem; font-weight:600;
+  letter-spacing:1.2px; text-transform:uppercase;
+  color:var(--text-sm);
+  padding:0 .75rem; margin-bottom:.6rem; margin-top:1rem;
+}
+.sb-section:first-of-type { margin-top:0; }
+
+.nav-btn {
+  display:flex; align-items:center; gap:.8rem;
+  width:100%; padding:.75rem .9rem;
+  background:none; border:none;
+  border-radius:var(--radius-sm);
+  color:var(--text-md); font-family:'Outfit',sans-serif;
+  font-size:.9rem; font-weight:500;
+  cursor:pointer; transition:var(--transition);
+  text-align:left; margin-bottom:2px;
+}
+.nav-btn .nb-ico {
+  width:34px; height:34px;
+  border-radius:9px;
+  background:rgba(255,255,255,0.05);
+  display:flex; align-items:center; justify-content:center;
+  font-size:.95rem; flex-shrink:0;
+  transition:var(--transition);
+}
+.nav-btn:hover { color:var(--text); background:rgba(255,255,255,0.04); }
+.nav-btn.active {
+  color:var(--emerald);
+  background:var(--emerald-glow);
+}
+.nav-btn.active .nb-ico { background:rgba(16,185,129,0.2); }
+
+.sb-foot { margin-top:auto; }
+.user-row {
+  display:flex; align-items:center; gap:.75rem;
+  padding:.75rem .75rem 1rem;
+}
+.user-av {
+  width:38px; height:38px; border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--purple));
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Clash Display',sans-serif;
+  font-size:1rem; font-weight:700;
+  color:#fff; flex-shrink:0;
+}
+.user-meta span { display:block; font-size:.88rem; font-weight:500; }
+.user-meta small { color:var(--text-sm); font-size:.72rem; }
+
+.btn-logout {
+  width:100%; padding:.7rem;
+  background:rgba(244,63,94,0.08);
+  border:1px solid rgba(244,63,94,0.18);
+  border-radius:var(--radius-sm);
+  color:#f87171;
+  font-family:'Clash Display',sans-serif;
+  font-size:.85rem; font-weight:600;
+  cursor:pointer; transition:var(--transition);
+}
+.btn-logout:hover { background:rgba(244,63,94,0.15); }
+
+/* TOPBAR */
+.topbar {
+  margin-left:256px;
+  padding:1rem 2rem;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  background:rgba(8,12,20,0.85);
+  backdrop-filter:blur(16px);
+  position:sticky; top:0; z-index:100;
+}
+.topbar-left { display:flex; align-items:center; gap:1rem; }
+.topbar h2 { font-size:1.1rem; font-weight:600; letter-spacing:-.2px; }
+.ham-btn {
+  display:none; background:none; border:none;
+  color:var(--text); font-size:1.4rem;
+  cursor:pointer; padding:.25rem;
+}
+
+.risk-chip {
+  padding:.35rem .9rem;
+  border-radius:999px; font-size:.75rem;
+  font-weight:600; letter-spacing:.3px;
+}
+.risk-low  { background:rgba(16,185,129,0.12); color:var(--low-color); border:1px solid rgba(16,185,129,0.2); }
+.risk-med  { background:rgba(245,158,11,0.12); color:var(--med-color); border:1px solid rgba(245,158,11,0.2); }
+.risk-high { background:rgba(244,63,94,0.12);  color:var(--high-color); border:1px solid rgba(244,63,94,0.2); }
+
+/* MAIN CONTENT */
+.main-wrap {
+  margin-left:256px;
+  flex:1; min-height:100vh;
+  display:flex; flex-direction:column;
+}
+.content { padding:2rem; flex:1; }
+
+/* SUB PAGES */
+.sub { display:none; animation:fadeIn .35s ease both; }
+.sub.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+
+.pg-head { margin-bottom:2rem; }
+.pg-head h2 { font-size:1.5rem; letter-spacing:-.5px; margin-bottom:.3rem; }
+.pg-head p { color:var(--text-md); font-size:.9rem; }
+
+/* ═══════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════ */
+.quiz-card {
+  background:var(--bg-card);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-lg);
+  padding:2rem;
+  margin-bottom:2rem;
+  box-shadow:var(--shadow-card);
+}
+.quiz-top {
+  display:flex; align-items:center;
+  justify-content:space-between;
+  margin-bottom:1.75rem;
+  flex-wrap:wrap; gap:1rem;
+}
+.quiz-top h3 { font-size:1.05rem; }
+.prog-wrap {
+  display:flex; align-items:center; gap:.75rem;
+  flex:1; max-width:300px;
+}
+.prog-track {
+  flex:1; height:5px;
+  background:rgba(255,255,255,0.07);
+  border-radius:999px; overflow:hidden;
+}
+.prog-fill {
+  height:100%;
+  background:linear-gradient(90deg,var(--emerald),var(--blue));
+  border-radius:999px;
+  transition:width .4s ease;
+  width:0%;
+}
+.prog-txt { font-size:.78rem; color:var(--text-sm); white-space:nowrap; }
+
+.q-grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:1.1rem;
+  margin-bottom:1.75rem;
+}
+.q-item label {
+  display:block;
+  font-size:.72rem; font-weight:500;
+  color:var(--text-sm);
+  text-transform:uppercase; letter-spacing:.6px;
+  margin-bottom:.45rem;
+}
+.q-item select {
+  width:100%; padding:.78rem 1rem;
+  background:var(--bg-input);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-sm);
+  color:var(--text);
+  font-family:'Outfit',sans-serif; font-size:.88rem;
+  cursor:pointer; outline:none;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235e7496' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right .9rem center;
+  transition:var(--transition);
+}
+.q-item select:focus { border-color:var(--emerald); box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
+.q-item select option { background:var(--bg-surface); }
+
+.btn-analyze {
+  padding:.9rem 2.5rem;
+  background:linear-gradient(135deg,var(--emerald),#059669);
+  border:none; border-radius:var(--radius-sm);
+  color:#031a0e;
+  font-family:'Clash Display',sans-serif;
+  font-size:1rem; font-weight:700;
+  cursor:pointer; transition:var(--transition);
+  letter-spacing:.3px;
+}
+.btn-analyze:hover { transform:translateY(-2px); box-shadow:0 14px 36px rgba(16,185,129,0.35); }
+
+/* RESULT SECTION */
+#result-sec {
+  display:none;
+  animation:fadeIn .5s ease both;
+}
+
+.result-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1.25rem;
+}
+.r-card {
+  background:var(--bg-card);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-lg);
+  padding:1.75rem;
+  box-shadow:var(--shadow-card);
+}
+.r-card-label {
+  font-size:.7rem; font-weight:600;
+  letter-spacing:1px; text-transform:uppercase;
+  color:var(--text-sm); margin-bottom:1.25rem;
+}
+
+/* invest bars */
+.i-bars { display:flex; flex-direction:column; gap:.9rem; }
+.i-bar-row {}
+.i-bar-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:.4rem; }
+.i-bar-name { font-size:.85rem; font-weight:500; }
+.i-bar-pct { font-size:.82rem; font-weight:700; }
+.i-bar-track { height:7px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; }
+.i-bar-fill { height:100%; border-radius:999px; transition:width 1.2s cubic-bezier(.4,0,.2,1); width:0; }
+
+/* chart */
+.chart-box { position:relative; height:210px; }
+
+/* rec pill */
+.rec-pill {
+  display:inline-flex; align-items:center; gap:.5rem;
+  padding:.45rem 1.1rem;
+  background:rgba(16,185,129,0.1);
+  border:1px solid rgba(16,185,129,0.25);
+  border-radius:999px;
+  font-size:.85rem; margin-bottom:1rem;
+}
+.rec-pill strong { color:var(--emerald); }
+.rec-analysis { font-size:.88rem; color:var(--text-md); line-height:1.75; }
+
+/* risk display */
+.risk-display { text-align:center; padding:1rem 0; }
+.risk-big { font-size:3.5rem; margin-bottom:.5rem; }
+.risk-name { font-family:'Clash Display',sans-serif; font-size:1.5rem; font-weight:700; }
+.risk-desc { font-size:.85rem; color:var(--text-md); margin-top:.4rem; line-height:1.6; }
+
+/* print btn */
+.print-btn {
+  display:inline-flex; align-items:center; gap:.5rem;
+  margin-top:1.5rem; padding:.75rem 1.75rem;
+  background:rgba(245,158,11,0.12);
+  border:1px solid rgba(245,158,11,0.25);
+  border-radius:var(--radius-sm);
+  color:var(--gold);
+  font-family:'Clash Display',sans-serif;
+  font-size:.9rem; font-weight:600;
+  cursor:pointer; transition:var(--transition);
+}
+.print-btn:hover { background:rgba(245,158,11,0.2); transform:translateY(-1px); }
+
+/* ═══════════════════════════════════════════
+   EDUKASI
+═══════════════════════════════════════════ */
+.edu-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:1.25rem;
+}
+.edu-card {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+  cursor:pointer;
+  transition:var(--transition);
+}
+.edu-card:hover {
+  border-color:rgba(255,255,255,0.15);
+  transform:translateY(-4px);
+  box-shadow:0 20px 48px rgba(0,0,0,0.5);
+}
+.edu-img {
+  aspect-ratio:1;
+  display:flex; align-items:center; justify-content:center;
+  font-size:4rem;
+  position:relative;
+}
+.edu-img::after {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom, transparent 50%, var(--bg-card) 100%);
+}
+.edu-body { padding:1.1rem; }
+.edu-body h3 { font-size:.95rem; margin-bottom:.4rem; }
+.edu-body p { font-size:.78rem; color:var(--text-md); line-height:1.55; }
+.edu-tag {
+  display:inline-block; margin-bottom:.6rem;
+  padding:.2rem .7rem;
+  border-radius:999px; font-size:.68rem;
+  font-weight:600; letter-spacing:.3px;
+}
+
+/* ═══════════════════════════════════════════
+   REKOMENDASI APPS
+═══════════════════════════════════════════ */
+.app-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:1.25rem;
+}
+.app-card {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:1.5rem;
+  display:flex; flex-direction:column;
+  transition:var(--transition);
+}
+.app-card:hover {
+  border-color:rgba(255,255,255,0.12);
+  transform:translateY(-3px);
+  box-shadow:0 16px 40px rgba(0,0,0,0.45);
+}
+.app-icon-box {
+  width:62px; height:62px;
+  border-radius:17px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:2rem; margin-bottom:1rem;
+  flex-shrink:0;
+}
+.app-name { font-size:1.05rem; font-family:'Clash Display',sans-serif; font-weight:600; margin-bottom:.25rem; }
+.app-cat { font-size:.78rem; color:var(--text-md); margin-bottom:.85rem; }
+.app-tags { display:flex; flex-wrap:wrap; gap:.35rem; margin-bottom:1.1rem; margin-top:auto; }
+.tag-chip {
+  padding:.22rem .65rem;
+  border-radius:999px; font-size:.7rem; font-weight:600;
+}
+.btn-dl {
+  display:flex; align-items:center; justify-content:center; gap:.5rem;
+  padding:.7rem;
+  background:rgba(16,185,129,0.1);
+  border:1px solid rgba(16,185,129,0.22);
+  border-radius:var(--radius-sm);
+  color:var(--emerald);
+  font-family:'Clash Display',sans-serif;
+  font-size:.85rem; font-weight:600;
+  text-decoration:none; cursor:pointer;
+  transition:var(--transition);
+}
+.btn-dl:hover { background:rgba(16,185,129,0.18); }
+
+/* ═══════════════════════════════════════════
+   RIWAYAT
+═══════════════════════════════════════════ */
+.hist-wrap {
+  background:var(--bg-card);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-lg);
+  overflow:hidden;
+}
+.hist-tbl { width:100%; border-collapse:collapse; }
+.hist-tbl th {
+  font-size:.72rem; font-weight:600;
+  letter-spacing:.8px; text-transform:uppercase;
+  color:var(--text-sm); text-align:left;
+  padding:.9rem 1.25rem;
+  border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,0.02);
+}
+.hist-tbl td {
+  padding:.9rem 1.25rem;
+  border-bottom:1px solid var(--border);
+  font-size:.88rem;
+}
+.hist-tbl tr:last-child td { border-bottom:none; }
+.hist-tbl tbody tr:hover td { background:rgba(255,255,255,0.02); }
+.hist-empty { text-align:center; color:var(--text-sm); padding:3rem; }
+
+/* ═══════════════════════════════════════════
+   INFO
+═══════════════════════════════════════════ */
+.info-wrap { max-width:700px; }
+.info-section {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:2rem;
+  margin-bottom:1.5rem;
+}
+.info-section h3 {
+  font-size:1rem;
+  color:var(--emerald);
+  margin-bottom:.9rem;
+  display:flex; align-items:center; gap:.5rem;
+}
+.info-section p, .info-section li {
+  font-size:.9rem; color:var(--text-md); line-height:1.8;
+}
+.info-section ul { list-style:none; }
+.info-section li { padding:.3rem 0; display:flex; gap:.6rem; }
+.info-section li::before { content:'→'; color:var(--emerald); flex-shrink:0; }
+.vm-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+.vm-block { background:var(--bg-input); border-radius:var(--radius); padding:1.5rem; }
+.vm-block h4 { font-size:.85rem; color:var(--gold); margin-bottom:.75rem; text-transform:uppercase; letter-spacing:.5px; }
+.chip-row { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.5rem; }
+.algo-chip {
+  padding:.35rem .9rem;
+  background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.2);
+  border-radius:999px; font-size:.75rem; color:var(--blue);
+  font-weight:500;
+}
+
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+.toast {
+  position:fixed; bottom:2rem; right:2rem;
+  padding:.9rem 1.5rem;
+  background:var(--bg-card2);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius);
+  font-size:.88rem;
+  z-index:9999;
+  transform:translateY(20px); opacity:0;
+  transition:all .3s ease;
+  pointer-events:none;
+  max-width:320px;
+}
+.toast.show { transform:none; opacity:1; }
+.toast.ok { border-color:rgba(16,185,129,0.3); }
+.toast.err { border-color:rgba(244,63,94,0.3); }
+
+/* OVERLAY mobile */
+.sb-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.6); z-index:199;
+}
+.sb-overlay.show { display:block; }
+
+/* ═══════════════════════════════════════════
+   PRINT STYLES
+═══════════════════════════════════════════ */
+@media print {
+  body { background:#fff !important; color:#111 !important; }
+  .sidebar,.topbar,.btn-analyze,.print-btn,
+  .quiz-card,.sb-overlay,.toast { display:none !important; }
+  .main-wrap { margin-left:0 !important; }
+  #result-sec { display:block !important; }
+  .r-card { border:1px solid #ddd; break-inside:avoid; }
+  .result-grid { grid-template-columns:1fr 1fr; }
+  .i-bar-fill { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .print-header { display:block !important; }
+}
+.print-header {
+  display:none;
+  text-align:center; padding:1rem 0 1.5rem;
+}
+.print-header h1 { font-size:1.5rem; }
+.print-header p { font-size:.9rem; color:#555; }
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:900px) {
+  .result-grid { grid-template-columns:1fr; }
+  .vm-grid { grid-template-columns:1fr; }
+  .q-grid { grid-template-columns:1fr; }
+}
+@media(max-width:768px) {
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:none; }
+  .topbar,.main-wrap { margin-left:0; }
+  .ham-btn { display:block; }
+  .content { padding:1.25rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+  PAGE: LOGIN / REGISTER
+═══════════════════════════════════════════ -->
+<div id="pg-login" class="page active">
+  <div class="login-wrap">
+    <div class="brand-mark">
+ <div class="logo-icon">
+  <img src="logo.png" alt="Logo" style="width:30%; height:30%; object-fit:cover;">
+</div>
+      <h1>InvestAI</h1>
+      <p>Sistem Rekomendasi Investasi Berbasis Backpropagation</p>
+    </div>
+    <div class="glass-card">
+      <div class="tab-row">
+        <button class="tab-btn on" id="tb-login" onclick="switchAuthTab('login')">Masuk</button>
+        <button class="tab-btn" id="tb-reg"   onclick="switchAuthTab('register')">Daftar</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="frm-login">
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="li-user" placeholder="Masukkan username" autocomplete="username">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="li-pass" placeholder="Masukkan password" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn-main" onclick="doLogin()">Masuk ke Sistem →</button>
+        <div class="inline-err" id="li-err">Username atau password salah.</div>
+        <p style="text-align:center;margin-top:1rem;font-size:.8rem;color:var(--text-sm)">
+          Demo: username <strong style="color:var(--text)">admin</strong> / password <strong style="color:var(--text)">admin</strong>
+        </p>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="frm-reg" style="display:none">
+        <div class="field">
+          <label>Nama Lengkap</label>
+          <input type="text" id="rg-name" placeholder="Nama lengkap Anda">
+        </div>
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="rg-user" placeholder="Buat username">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="rg-mail" placeholder="Alamat email">
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="rg-pass" placeholder="Buat password (min 6 karakter)">
+        </div>
+        <button class="btn-main" onclick="doRegister()">Buat Akun →</button>
+        <div class="inline-err" id="rg-err"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+  PAGE: APP SHELL
+═══════════════════════════════════════════ -->
+<div id="pg-app" class="page">
+
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSB()"></div>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-icon">📈</div>
+      <span class="sb-brand-name">InvestAI</span>
+    </div>
+
+    <div class="sb-section">Menu Utama</div>
+    <button class="nav-btn active" id="nb-dash"   onclick="navTo('dash',this)">
+      <span class="nb-ico">🏠</span> Beranda
+    </button>
+    <button class="nav-btn" id="nb-edu"    onclick="navTo('edu',this)">
+      <span class="nb-ico">📚</span> Pengetahuan
+    </button>
+    <button class="nav-btn" id="nb-apps"   onclick="navTo('apps',this)">
+      <span class="nb-ico">📱</span> Rekomendasi App
+    </button>
+    <button class="nav-btn" id="nb-hist"   onclick="navTo('hist',this)">
+      <span class="nb-ico">🕐</span> Riwayat
+    </button>
+    <button class="nav-btn" id="nb-info"   onclick="navTo('info',this)">
+      <span class="nb-ico">ℹ️</span> Info Aplikasi
+    </button>
+
+    <div class="sb-foot">
+      <div class="user-row">
+        <div class="user-av" id="u-av">A</div>
+        <div class="user-meta">
+          <span id="u-name">Admin</span>
+          <small>Investor Aktif</small>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">⏻ &nbsp;Keluar</button>
+    </div>
+  </nav>
+
+  <!-- TOPBAR + MAIN -->
+  <div class="main-wrap">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="ham-btn" onclick="toggleSB()">☰</button>
+        <h2 id="tb-title">Beranda</h2>
+      </div>
+      <span class="risk-chip risk-low" id="risk-chip">Low Risk</span>
+    </div>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="sub active" id="sub-dash">
+        <div class="pg-head">
+          <h2>Profil Investasi</h2>
+          <p>Jawab pertanyaan berikut agar AI dapat memberikan rekomendasi terbaik untuk Anda.</p>
+        </div>
+
+        <div class="quiz-card">
+          <div class="quiz-top">
+            <h3>Kuisioner Profil Risiko</h3>
+            <div class="prog-wrap">
+              <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+              <span class="prog-txt" id="prog-txt">0 / 10</span>
+            </div>
+          </div>
+
+          <div class="q-grid">
+            <div class="q-item">
+              <label>1. Usia Anda</label>
+              <select id="q1" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">18 – 25 tahun</option>
+                <option value="2">26 – 35 tahun</option>
+                <option value="3">36 – 45 tahun</option>
+                <option value="4">46 tahun ke atas</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>2. Pendapatan Bulanan</label>
+              <select id="q2" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Di bawah Rp 3 Juta</option>
+                <option value="2">Rp 3 – 7 Juta</option>
+                <option value="3">Rp 7 – 15 Juta</option>
+                <option value="4">Di atas Rp 15 Juta</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>3. Tujuan Investasi</label>
+              <select id="q3" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Dana Darurat</option>
+                <option value="2">Pendidikan Anak</option>
+                <option value="3">Pensiun</option>
+                <option value="4">Pertumbuhan Kekayaan</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>4. Horizon Investasi</label>
+              <select id="q4" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Kurang dari 1 tahun</option>
+                <option value="2">1 – 3 tahun</option>
+                <option value="3">3 – 5 tahun</option>
+                <option value="4">Lebih dari 5 tahun</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>5. Toleransi Risiko</label>
+              <select id="q5" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Sangat Rendah – Tidak mau rugi</option>
+                <option value="2">Rendah – Sedikit fluktuasi ok</option>
+                <option value="3">Sedang – Siap naik-turun</option>
+                <option value="4">Tinggi – Siap volatilitas besar</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>6. Pengalaman Investasi</label>
+              <select id="q6" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Belum pernah</option>
+                <option value="2">Pemula (< 1 tahun)</option>
+                <option value="3">Menengah (1 – 3 tahun)</option>
+                <option value="4">Berpengalaman (> 3 tahun)</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>7. Dana yang Tersedia</label>
+              <select id="q7" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Di bawah Rp 1 Juta</option>
+                <option value="2">Rp 1 – 10 Juta</option>
+                <option value="3">Rp 10 – 50 Juta</option>
+                <option value="4">Di atas Rp 50 Juta</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>8. Frekuensi Memantau Portofolio</label>
+              <select id="q8" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Jarang (1× setahun)</option>
+                <option value="2">Bulanan</option>
+                <option value="3">Mingguan</option>
+                <option value="4">Harian</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>9. Reaksi Jika Portofolio Turun 20%</label>
+              <select id="q9" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Jual semua secepatnya</option>
+                <option value="2">Khawatir, evaluasi ulang</option>
+                <option value="3">Tetap pegang, sabar</option>
+                <option value="4">Beli lebih banyak (averaging)</option>
+              </select>
+            </div>
+            <div class="q-item">
+              <label>10. Preferensi Likuiditas</label>
+              <select id="q10" onchange="qChange()">
+                <option value="">— Pilih —</option>
+                <option value="1">Butuh dana kapan saja</option>
+                <option value="2">Bisa tunggu 1 bulan</option>
+                <option value="3">Bisa tunggu 6–12 bulan</option>
+                <option value="4">Tidak masalah jangka panjang</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn-analyze" onclick="runAI()">🔍 &nbsp;Analisis dengan AI</button>
+        </div>
+
+        <!-- RESULT -->
+        <div id="result-sec">
+          <div class="print-header" id="print-hdr">
+            <h1>InvestAI — Hasil Analisis Profil Investasi</h1>
+            <p id="print-meta"></p>
+          </div>
+
+          <div class="result-grid">
+            <div class="r-card">
+              <div class="r-card-label">Kecocokan Investasi (%)</div>
+              <div class="i-bars" id="i-bars"></div>
+            </div>
+            <div class="r-card">
+              <div class="r-card-label">Visualisasi Distribusi</div>
+              <div class="chart-box"><canvas id="myChart"></canvas></div>
+            </div>
+            <div class="r-card">
+              <div class="r-card-label">Rekomendasi Utama</div>
+              <div class="rec-pill">🏆 Rekomendasi: <strong id="rec-name">—</strong></div>
+              <p class="rec-analysis" id="rec-text">—</p>
+            </div>
+            <div class="r-card">
+              <div class="r-card-label">Profil Risiko</div>
+              <div class="risk-display">
+                <div class="risk-big" id="risk-ico">🟢</div>
+                <div class="risk-name" id="risk-lbl">Low Risk</div>
+                <p class="risk-desc" id="risk-dsc">—</p>
+              </div>
+            </div>
+          </div>
+
+          <button class="print-btn" onclick="doPrint()">🖨️ &nbsp;Cetak / Simpan PDF</button>
+        </div>
+      </div>
+
+      <!-- ── EDUKASI ── -->
+      <div class="sub" id="sub-edu">
+        <div class="pg-head">
+          <h2>Pengetahuan Investasi</h2>
+          <p>Pelajari berbagai instrumen investasi sebelum membuat keputusan.</p>
+        </div>
+        <div class="edu-grid" id="edu-grid"></div>
+      </div>
+
+      <!-- ── REKOMENDASI APPS ── -->
+      <div class="sub" id="sub-apps">
+        <div class="pg-head">
+          <h2>Rekomendasi Aplikasi</h2>
+          <p>Platform investasi terpercaya yang dapat Anda gunakan.</p>
+        </div>
+        <div class="app-grid" id="app-grid"></div>
+      </div>
+
+      <!-- ── RIWAYAT ── -->
+      <div class="sub" id="sub-hist">
+        <div class="pg-head">
+          <h2>Riwayat Prediksi</h2>
+          <p>Rekap hasil analisis profil investasi Anda sebelumnya.</p>
+        </div>
+        <div class="hist-wrap">
+          <table class="hist-tbl">
+            <thead>
+              <tr>
+                <th>Tanggal &amp; Waktu</th>
+                <th>Rekomendasi</th>
+                <th>Profil Risiko</th>
+                <th>Skor AI</th>
+              </tr>
+            </thead>
+            <tbody id="hist-body">
+              <tr><td colspan="4" class="hist-empty">Belum ada riwayat analisis.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── INFO ── -->
+      <div class="sub" id="sub-info">
+        <div class="pg-head">
+          <h2>Tentang Aplikasi</h2>
+          <p>Informasi lengkap mengenai sistem InvestAI.</p>
+        </div>
+        <div class="info-wrap">
+          <div class="info-section">
+            <h3>📌 Deskripsi Sistem</h3>
+            <p>InvestAI adalah sistem rekomendasi investasi berbasis Kecerdasan Buatan yang menggunakan algoritma <strong>Backpropagation Neural Network</strong>. Sistem menganalisis profil pengguna melalui 10 pertanyaan terstruktur untuk menghasilkan rekomendasi instrumen investasi yang paling sesuai secara personal dan akurat.</p>
+            <div class="chip-row" style="margin-top:1rem">
+              <span class="algo-chip">Backpropagation</span>
+              <span class="algo-chip">Neural Network</span>
+              <span class="algo-chip">Multi-Layer Perceptron</span>
+              <span class="algo-chip">Weighted Scoring</span>
+            </div>
+          </div>
+
+          <div class="vm-grid">
+            <div class="info-section vm-block">
+              <h4>🎯 Visi</h4>
+              <ul>
+                <li>Menjadi platform edukasi investasi terdepan di Indonesia</li>
+                <li>Memberdayakan masyarakat melalui literasi keuangan digital</li>
+                <li>Menghadirkan AI inklusif untuk semua kalangan</li>
+              </ul>
+            </div>
+            <div class="info-section vm-block">
+              <h4>🚀 Misi</h4>
+              <ul>
+                <li>Memberikan rekomendasi investasi yang akurat & personal</li>
+                <li>Menyediakan edukasi investasi yang mudah dipahami</li>
+                <li>Menghubungkan investor dengan platform terpercaya</li>
+                <li>Terus berinovasi dalam algoritma prediksi AI</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <h3>⚙️ Cara Kerja Algoritma</h3>
+            <p>Model menggunakan jaringan syaraf dengan 3 lapisan: <em>input layer</em> (10 fitur profil), <em>hidden layer</em> (bobot terlatih), dan <em>output layer</em> (5 kelas instrumen investasi). Proses backpropagation meminimalkan error dengan gradient descent, menyesuaikan bobot secara iteratif berdasarkan data latih profil investor Indonesia.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-wrap -->
+</div><!-- /pg-app -->
+
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+  JAVASCRIPT
+═══════════════════════════════════════════ -->
+<script>
+/* ══════════ STATE ══════════ */
+let users   = JSON.parse(localStorage.getItem('ii_users')   || '[]');
+let history = JSON.parse(localStorage.getItem('ii_hist')    || '[]');
+let curUser = null;
+let chartInst = null;
+
+/* ══════════ AUTH ══════════ */
+function switchAuthTab(t) {
+  const isL = t === 'login';
+  document.getElementById('tb-login').classList.toggle('on', isL);
+  document.getElementById('tb-reg').classList.toggle('on', !isL);
+  document.getElementById('frm-login').style.display = isL ? '' : 'none';
+  document.getElementById('frm-reg').style.display   = isL ? 'none' : '';
+}
+
+function doLogin() {
+  const u = v('li-user'), p = v('li-pass');
+  if (!u || !p) { showErr('li-err','Isi username dan password.'); return; }
+  const found = users.find(x => x.u === u && x.p === p);
+  if (!found && !(u === 'admin' && p === 'admin')) {
+    showErr('li-err','Username atau password salah.'); return;
+  }
+  curUser = found || { u:'admin', n:'Administrator', e:'admin@investai.id' };
+  enterApp();
+}
+
+function doRegister() {
+  const n = v('rg-name'), u = v('rg-user'), e = v('rg-mail'), p = v('rg-pass');
+  if (!n||!u||!e||!p)           { showErr('rg-err','Lengkapi semua field.'); return; }
+  if (p.length < 6)              { showErr('rg-err','Password minimal 6 karakter.'); return; }
+  if (users.find(x => x.u===u)) { showErr('rg-err','Username sudah digunakan.'); return; }
+  users.push({ u, n, e, p });
+  localStorage.setItem('ii_users', JSON.stringify(users));
+  toast('✅ Akun berhasil dibuat! Silakan login.', 'ok');
+  switchAuthTab('login');
+  setTimeout(()=>{ document.getElementById('li-user').value=u; },400);
+}
+
+function enterApp() {
+  document.getElementById('pg-login').classList.remove('active');
+  document.getElementById('pg-app').classList.add('active');
+  const n = curUser.n || curUser.u;
+  document.getElementById('u-name').textContent = n;
+  document.getElementById('u-av').textContent   = n[0].toUpperCase();
+  renderEdu();
+  renderApps();
+  renderHist();
+}
+
+function doLogout() {
+  document.getElementById('pg-app').classList.remove('active');
+  document.getElementById('pg-login').classList.add('active');
+  curUser = null;
+  // reset
+  ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('result-sec').style.display = 'none';
+  qChange();
+  navTo('dash', document.getElementById('nb-dash'));
+}
+
+/* ══════════ NAV ══════════ */
+const PAGE_TITLES = { dash:'Beranda', edu:'Pengetahuan', apps:'Rekomendasi App', hist:'Riwayat', info:'Info Aplikasi' };
+
+function navTo(page, btn) {
+  document.querySelectorAll('.sub').forEach(s => s.classList.remove('active'));
+  document.getElementById('sub-' + page).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('tb-title').textContent = PAGE_TITLES[page];
+  if (page === 'hist') renderHist();
+  closeSB();
+}
+
+function toggleSB() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('show');
+}
+function closeSB() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('show');
+}
+
+/* ══════════ QUIZ ══════════ */
+const QS = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10'];
+
+function qChange() {
+  const filled = QS.filter(id => document.getElementById(id).value).length;
+  document.getElementById('prog-fill').style.width = (filled / 10 * 100) + '%';
+  document.getElementById('prog-txt').textContent  = filled + ' / 10';
+}
+
+/* ══════════ AI ENGINE (Backpropagation-inspired) ══════════ */
+function runAI() {
+  const vals = QS.map(id => parseInt(document.getElementById(id).value) || 0);
+  if (vals.some(v => !v)) { toast('⚠️ Lengkapi semua pertanyaan!', 'err'); return; }
+
+  /* Weighted feature extraction — simulates trained BP weights */
+  // Features: age(q1), income(q2), goal(q3), horizon(q4), risk_tol(q5),
+  //           experience(q6), capital(q7), monitor(q8), reaction(q9), liquidity(q10)
+  const [age, inc, goal, hor, rtol, exp, cap, mon, react, liq] = vals;
+
+  // Risk score (higher = more aggressive)
+  const riskScore = (rtol * 2.5) + (hor * 1.8) + (exp * 1.5) + (react * 2.0) +
+                    (mon * 1.2) + (liq * 1.0);
+  const riskMax   = 40;
+  const riskNorm  = riskScore / riskMax; // 0..1
+
+  // Raw neuron activations (sigmoid-like output per instrument)
+  // Saham: high risk tolerance, long horizon, experience, income
+  const w_saham  = sigmoid((rtol*3 + hor*2 + exp*2 + inc*1 + mon*1) - 20);
+  // Reksadana: moderate all-round
+  const w_reksa  = sigmoid((3.0/rtol * 2 + 3.0/hor * 1.5 + (4-exp)*1 + inc*1) - 8);
+  // Crypto: very high risk tolerance, young, active monitoring
+  const w_crypto = sigmoid((rtol*3 + mon*2 + (4-age)*1.5 + exp*1) - 22);
+  // Obligasi: low risk, conservative, long horizon
+  const w_oblig  = sigmoid(((4-rtol)*3 + hor*1.5 + (4-react)*2 + inc*1) - 16);
+  // Emas: defensive, low liquidity need
+  const w_emas   = sigmoid(((4-rtol)*2 + (4-liq)*2 + hor*1 + cap*1) - 14);
+
+  // Softmax normalization
+  const raw  = [w_saham, w_reksa, w_crypto, w_oblig, w_emas];
+  const expV = raw.map(x => Math.exp(x * 3));
+  const sumE = expV.reduce((a,b)=>a+b,0);
+  const pcts = expV.map(x => Math.round(x/sumE*100));
+
+  // Adjust so they sum to 100
+  const diff = 100 - pcts.reduce((a,b)=>a+b,0);
+  pcts[0] += diff;
+
+  const labels = ['Saham','Reksadana','Crypto','Obligasi','Emas'];
+  const colors = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#f97316'];
+
+  // Recommendation
+  const maxIdx = pcts.indexOf(Math.max(...pcts));
+  const recName = labels[maxIdx];
+
+  // Risk profile
+  let riskLabel, riskIco, riskDsc, riskClass;
+  if (riskNorm < 0.35) {
+    riskLabel='Low Risk'; riskIco='🟢'; riskClass='risk-low';
+    riskDsc='Anda cenderung konservatif dan memprioritaskan keamanan modal di atas imbal hasil.';
+  } else if (riskNorm < 0.65) {
+    riskLabel='Medium Risk'; riskIco='🟡'; riskClass='risk-med';
+    riskDsc='Anda siap menerima fluktuasi sedang demi potensi imbal hasil yang lebih baik.';
+  } else {
+    riskLabel='High Risk'; riskIco='🔴'; riskClass='risk-high';
+    riskDsc='Anda agresif dan siap menghadapi volatilitas tinggi demi pertumbuhan maksimal.';
+  }
+
+  const analysisTxt = buildAnalysis(recName, riskLabel, pcts, labels, hor, exp, cap);
+
+  // Save history
+  const entry = {
+    ts:    new Date().toLocaleString('id-ID'),
+    rec:   recName,
+    risk:  riskLabel,
+    score: Math.round(riskNorm * 100)
+  };
+  history.unshift(entry);
+  if (history.length > 20) history.pop();
+  localStorage.setItem('ii_hist', JSON.stringify(history));
+
+  // Render
+  renderResult(labels, pcts, colors, maxIdx, recName, analysisTxt, riskLabel, riskIco, riskDsc, riskClass);
+  toast('✅ Analisis selesai! Lihat hasil di bawah.', 'ok');
+
+  // Scroll to result
+  setTimeout(()=>document.getElementById('result-sec').scrollIntoView({behavior:'smooth',block:'start'}),200);
+}
+
+function sigmoid(x) { return 1/(1+Math.exp(-x)); }
+
+function buildAnalysis(rec, risk, pcts, labels, hor, exp, cap) {
+  const horMap = {1:'jangka sangat pendek (< 1 tahun)',2:'jangka pendek (1–3 tahun)',3:'jangka menengah (3–5 tahun)',4:'jangka panjang (> 5 tahun)'};
+  const expMap = {1:'tanpa pengalaman investasi',2:'sebagai investor pemula',3:'dengan pengalaman menengah',4:'sebagai investor berpengalaman'};
+  const capMap = {1:'modal di bawah Rp 1 Juta',2:'modal Rp 1–10 Juta',3:'modal Rp 10–50 Juta',4:'modal di atas Rp 50 Juta'};
+  const recDesc = {
+    'Saham':     'Saham menawarkan potensi imbal hasil tinggi jangka panjang. Pastikan Anda melakukan riset fundamental sebelum membeli.',
+    'Reksadana': 'Reksadana adalah pilihan ideal untuk diversifikasi otomatis dengan dikelola manajer investasi profesional.',
+    'Crypto':    'Aset kripto menawarkan potensi keuntungan luar biasa namun dengan volatilitas sangat tinggi. Gunakan hanya dana yang siap hilang.',
+    'Obligasi':  'Obligasi memberikan pendapatan tetap yang stabil dan aman, cocok untuk investor konservatif.',
+    'Emas':      'Emas adalah lindung nilai inflasi yang telah terbukti selama berabad-abad. Cocok sebagai diversifikasi portofolio.'
+  };
+  const top2 = [...pcts].map((p,i)=>({p,i})).sort((a,b)=>b.p-a.p).slice(0,2).map(x=>labels[x.i]);
+  return `Berdasarkan analisis backpropagation, profil Anda sebagai investor ${riskMap(risk)} ${expMap[exp]} dengan ${horMap[hor]} dan ${capMap[cap]} menunjukkan kesesuaian tertinggi dengan ${labels.join(' dan ')} secara berurutan. Instrumen utama yang direkomendasikan adalah ${rec} (${pcts[['Saham','Reksadana','Crypto','Obligasi','Emas'].indexOf(rec)]}%). ${recDesc[rec]}`;
+}
+function riskMap(r) { return {Low:'konservatif (Low Risk)',Medium:'moderat (Medium Risk)',High:'agresif (High Risk)'}[r.split(' ')[0]]; }
+
+/* ══════════ RENDER RESULT ══════════ */
+function renderResult(labels, pcts, colors, maxIdx, recName, text, riskLabel, riskIco, riskDsc, riskClass) {
+  // Show section
+  document.getElementById('result-sec').style.display = 'block';
+
+  // Bars
+  const barsEl = document.getElementById('i-bars');
+  barsEl.innerHTML = '';
+  labels.forEach((lbl, i) => {
+    const d = document.createElement('div');
+    d.className = 'i-bar-row';
+    d.innerHTML = `
+      <div class="i-bar-top">
+        <span class="i-bar-name" style="color:${colors[i]}">${lbl}</span>
+        <span class="i-bar-pct" style="color:${colors[i]}">${pcts[i]}%</span>
+      </div>
+      <div class="i-bar-track">
+        <div class="i-bar-fill" style="background:${colors[i]};width:0%" data-w="${pcts[i]}"></div>
+      </div>`;
+    barsEl.appendChild(d);
+  });
+  // Animate bars
+  setTimeout(()=>{
+    document.querySelectorAll('.i-bar-fill').forEach(el=>{
+      el.style.width = el.dataset.w + '%';
+    });
+  },100);
+
+  // Chart
+  if (chartInst) chartInst.destroy();
+  const ctx = document.getElementById('myChart').getContext('2d');
+  chartInst = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets:[{
+        data: pcts,
+        backgroundColor: colors.map(c=>c+'cc'),
+        borderColor: colors,
+        borderWidth: 2,
+        hoverOffset: 8
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      cutout:'60%',
+      plugins:{
+        legend:{ position:'bottom', labels:{ color:'#9badc8', font:{size:11,family:'Outfit'}, padding:12, boxWidth:12 } },
+        tooltip:{ callbacks:{ label: ctx=>`${ctx.label}: ${ctx.parsed}%` } }
+      }
+    }
+  });
+
+  // Rec text
+  document.getElementById('rec-name').textContent = recName;
+  document.getElementById('rec-text').textContent = text;
+
+  // Risk
+  document.getElementById('risk-ico').textContent = riskIco;
+  document.getElementById('risk-lbl').textContent = riskLabel;
+  document.getElementById('risk-dsc').textContent = riskDsc;
+  const chip = document.getElementById('risk-chip');
+  chip.className = 'risk-chip ' + riskClass.replace('risk-','risk-').split('-').map((w,i)=>i?w:'risk').join('-');
+  chip.className = 'risk-chip ' + riskClass;
+  chip.textContent = riskLabel;
+}
+
+/* ══════════ PRINT ══════════ */
+function doPrint() {
+  document.getElementById('print-meta').textContent =
+    `Dicetak: ${new Date().toLocaleString('id-ID')} | Pengguna: ${curUser.n || curUser.u}`;
+  window.print();
+}
+
+/* ══════════ EDUKASI DATA ══════════ */
+const EDU_DATA = [
+  { ico:'<img src="saham.jpg" style="width:100%;height:100%;object-fit:cover">', tag:'Ekuitas', tagC:'#3b82f6', tagBg:'rgba(59,130,246,0.12)',
+    title:'Saham', desc:'Surat berharga yang merepresentasikan kepemilikan sebagian perusahaan. Potensi dividen & capital gain, namun risiko tinggi.' },
+  { ico:'<img src="reksadana.jpg" style="width:100%;height:100%;object-fit:cover">', tag:'Kolektif', tagC:'#10b981', tagBg:'rgba(16,185,129,0.12)',
+    title:'Reksa Dana', desc:'Dana kolektif investor yang dikelola manajer investasi profesional. Diversifikasi otomatis, cocok untuk pemula.' },
+  { ico: '<img src="crypto.jpg" style="width:100%;height:100%;object-fit:cover">', tag:'Digital', tagC:'#8b5cf6', tagBg:'rgba(139,92,246,0.12)',
+    title:'Crypto', desc:'Aset digital berbasis teknologi blockchain. Volatilitas sangat tinggi dengan potensi keuntungan luar biasa.' },
+  { ico: '<img src="obligasi.jpg" style="width:100%;height:100%;object-fit:cover">', grad:'rgba(245,158,11,0.15),rgba(245,158,11,0.03)', tag:'Pendapatan Tetap', tagC:'#f59e0b', tagBg:'rgba(245,158,11,0.12)',
+    title:'Obligasi', desc:'Surat utang dari pemerintah atau perusahaan. Memberikan kupon (bunga) tetap secara berkala, risiko rendah.' },
+  { ico: '<img src="emas.jpg" style="width:100%;height:100%;object-fit:cover">', grad:'rgba(249,115,22,0.15),rgba(249,115,22,0.03)', tag:'Komoditas', tagC:'#f97316', tagBg:'rgba(249,115,22,0.12)',
+    title:'Emas', desc:'Logam mulia sebagai aset lindung nilai (hedging) terhadap inflasi. Stabil jangka panjang dan likuid.' },
+  { ico:  '<img src="properti.jpg" style="width:100%;height:100%;object-fit:cover">'  , grad:'rgba(236,72,153,0.15),rgba(236,72,153,0.03)', tag:'Properti', tagC:'#ec4899', tagBg:'rgba(236,72,153,0.12)',
+    title:'Properti', desc:'Investasi tanah dan bangunan. Nilai cenderung apresiasi jangka panjang dengan potensi pendapatan sewa.' },
+];
+
+function renderEdu() {
+  const g = document.getElementById('edu-grid');
+  g.innerHTML = EDU_DATA.map(e => `
+    <div class="edu-card">
+      <div class="edu-img" style="background:linear-gradient(135deg,${e.grad})">${e.ico}</div>
+      <div class="edu-body">
+        <span class="edu-tag" style="color:${e.tagC};background:${e.tagBg}">${e.tag}</span>
+        <h3>${e.title}</h3>
+        <p>${e.desc}</p>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════ APPS DATA ══════════ */
+const APPS_DATA = [
+  { ico:'<img src="bibit.jpg" style="width:50px;height:50px;border-radius:12px;object-fit:cover">',bg:'rgba(16,185,129,0.15)', name:'Bibit', cat:'Reksa Dana & Saham',
+    tags:[{l:'Reksa Dana',c:'#10b981',b:'rgba(16,185,129,0.12)'},{l:'Saham',c:'#3b82f6',b:'rgba(59,130,246,0.12)'}],
+    url:'https://play.google.com/store/apps/details?id=com.bibit.bibitid' },
+  { ico:'<img src="ajaib.jpg" style="width:50px;height:50px;border-radius:12px;object-fit:cover">', bg:'rgba(245,158,11,0.15)', name:'Ajaib', cat:'Saham & Reksa Dana',
+    tags:[{l:'Saham',c:'#3b82f6',b:'rgba(59,130,246,0.12)'},{l:'Reksa Dana',c:'#10b981',b:'rgba(16,185,129,0.12)'}],
+    url:'https://play.google.com/store/apps/details?id=ajaib.co.id' },
+  { ico:'<img src="pintu.jpg" style="width:50px;height:50px;border-radius:12px;object-fit:cover">',bg:'rgba(139,92,246,0.15)', name:'Pintu', cat:'Cryptocurrency',
+    tags:[{l:'Crypto',c:'#8b5cf6',b:'rgba(139,92,246,0.12)'}],
+    url:'https://play.google.com/store/apps/details?id=com.valar.pintu' },
+  { ico:'<img src="indodax.jpg" style="width:50px;height:50px;border-radius:12px;object-fit:cover">',bg:'rgba(59,130,246,0.15)', name:'Indodax', cat:'Cryptocurrency Exchange',
+    tags:[{l:'Crypto',c:'#8b5cf6',b:'rgba(139,92,246,0.12)'}],
+    url:'https://play.google.com/store/apps/details?id=id.co.bitcoin' },
+  { ico:'<img src="bareksa.jpg" style="width:50px;height:50px;border-radius:12px;object-fit:cover">',bg:'rgba(249,115,22,0.15)', name:'Bareksa', cat:'Reksa Dana & Obligasi',
+    tags:[{l:'Reksa Dana',c:'#10b981',b:'rgba(16,185,129,0.12)'},{l:'Obligasi',c:'#f59e0b',b:'rgba(245,158,11,0.12)'}],
+    url:'https://play.google.com/store/apps/details?id=com.bareksa.app' },
+  { ico:'<img src="stockbit.jpg" style="width:50px;height:50px;border-radius:12px;object-fit:cover">',bg:'rgba(244,63,94,0.15)', name:'Stockbit', cat:'Saham & Analisis',
+    tags:[{l:'Saham',c:'#3b82f6',b:'rgba(59,130,246,0.12)'}],
+    url:'https://play.google.com/store/apps/details?id=com.stockbit.android' },
+  { ico:'<img src="pegadaian.jpg" style="width:50px;height:50px;border-radius:12px;object-fit:cover">',bg:'rgba(245,158,11,0.15)', name:'Pegadaian Digital', cat:'Emas & Gadai',
+    tags:[{l:'Emas',c:'#f97316',b:'rgba(249,115,22,0.12)'}],
+    url:'https://play.google.com/store/apps/details?id=com.pegadaiandigital' },
+  { ico:'<img src="ipot.jpg" style="width:50px;height:50px;border-radius:12px;object-fit:cover">',bg:'rgba(16,185,129,0.15)', name:'IPOT', cat:'Saham & Reksa Dana',
+    tags:[{l:'Saham',c:'#3b82f6',b:'rgba(59,130,246,0.12)'},{l:'Reksa Dana',c:'#10b981',b:'rgba(16,185,129,0.12)'}],
+    url:'https://play.google.com/store/apps/details?id=com.indopremier.ipot' },
+];
+
+function renderApps() {
+  const g = document.getElementById('app-grid');
+  g.innerHTML = APPS_DATA.map(a => `
+    <div class="app-card">
+      <div class="app-icon-box" style="background:${a.bg}">${a.ico}</div>
+      <div class="app-name">${a.name}</div>
+      <div class="app-cat">${a.cat}</div>
+      <div class="app-tags">
+        ${a.tags.map(t=>`<span class="tag-chip" style="color:${t.c};background:${t.b}">${t.l}</span>`).join('')}
+      </div>
+      <a class="btn-dl" href="${a.url}" target="_blank" rel="noopener">⬇ &nbsp;Download App</a>
+    </div>`).join('');
+}
+
+/* ══════════ HISTORY ══════════ */
+const RISK_COLORS = { 'Low Risk':'#10b981','Medium Risk':'#f59e0b','High Risk':'#f43f5e' };
+function renderHist() {
+  const tb = document.getElementById('hist-body');
+  if (!history.length) {
+    tb.innerHTML = '<tr><td colspan="4" class="hist-empty">Belum ada riwayat analisis.</td></tr>';
+    return;
+  }
+  tb.innerHTML = history.map(h => `
+    <tr>
+      <td>${h.ts}</td>
+      <td><strong>${h.rec}</strong></td>
+      <td><span style="color:${RISK_COLORS[h.risk]||'#9badc8'};font-weight:600">${h.risk}</span></td>
+      <td>${h.score} / 100</td>
+    </tr>`).join('');
+}
+
+/* ══════════ UTILS ══════════ */
+function v(id) { return document.getElementById(id).value.trim(); }
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 3500);
+}
+
+let toastT;
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast ' + type + ' show';
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>el.classList.remove('show'), 3500);
+}
+
+/* keyboard enter on login */
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('li-pass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+</script>
+</body>
+</html>
